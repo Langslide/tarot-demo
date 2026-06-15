@@ -1,47 +1,123 @@
-# Tarot Oracle — AI Reading Demo (PoC)
+# Tarot Oracle — AI Reading Demo (Standalone)
 
-A generic landing page with an embedded AI tarot chatbot. The chatbot runs the
-full 7-step reading flow client-side and calls the `tarot_reading_agent` backend
-(GPT-4o, grounded in a Major Arcana knowledge base) to generate the actual
-reading. If the backend is unavailable, it gracefully falls back to a local
-template generator so the demo never breaks.
+A self-contained landing page with an embedded AI tarot chatbot. The frontend runs
+the full 7-step reading flow in the browser; the bundled Python backend generates
+readings with GPT-4o, grounded in a curated Major Arcana knowledge base and a
+local semantic retriever (numpy + OpenAI embeddings). If the API is unavailable,
+the UI falls back to a local template generator.
 
-## Files
-- `index.html` — landing page (hero + embedded chatbot)
-- `styles.css` — dark-mystical theme
-- `app.js` — conversation state machine + AI fetch + local fallback
-- `config.js` — points the chatbot at the backend (`TAROT_API_BASE`)
+No Connektra Agents platform, database, or auth required — only `OPENAI_API_KEY`.
 
-## Run locally
+## Repository layout
 
-1. Start the backend (in `../agents`), with `OPENAI_API_KEY` set:
-   ```bash
-   cd ../agents
-   PYTHONPATH=src OPENAI_API_KEY=sk-... .venv/bin/uvicorn connektra_agents.api.main:app --port 8080
-   ```
-2. Serve this folder (any static server):
-   ```bash
-   python3 -m http.server 3000   # or: npx serve
-   ```
-3. Open http://localhost:3000
+```
+tarot-demo/
+├── index.html, styles.css, app.js, config.js   # static UI
+├── assets/cards/                               # Rider-Waite Major Arcana (PD)
+├── backend/
+│   ├── main.py                                 # FastAPI: API + static UI
+│   ├── requirements.txt
+│   └── tarot/                                  # reading engine
+│       ├── reading.py, retriever.py, knowledge.py, …
+│       └── data/major_arcana.json
+└── Dockerfile
+```
 
-The AI endpoint is `POST {TAROT_API_BASE}/v1/public/tarot/reading` — public/unauthenticated for the demo.
+## Quick start (single server)
+
+```bash
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env   # add OPENAI_API_KEY
+uvicorn main:app --reload --port 8000
+```
+
+Open **http://localhost:8000** — UI and API share the same origin.
+
+## Split dev (optional)
+
+Terminal 1 — API only:
+
+```bash
+cd backend && source .venv/bin/activate
+uvicorn main:app --reload --port 8000
+```
+
+Terminal 2 — static UI only:
+
+```bash
+python3 -m http.server 3000
+```
+
+Set in `config.js`:
+
+```js
+window.TAROT_API_BASE = "http://localhost:8000";
+```
+
+## Docker
+
+```bash
+docker build -t tarot-oracle .
+docker run --rm -p 8000:8000 -e OPENAI_API_KEY=sk-... tarot-oracle
+```
+
+## API
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | Service health |
+| `GET` | `/v1/public/tarot/health` | Tarot module health |
+| `POST` | `/v1/public/tarot/reading` | Generate a reading |
+
+Request body:
+
+```json
+{
+  "question": "Should I take the new role?",
+  "category": "career",
+  "seekerName": "Alex",
+  "cards": [
+    { "name": "The Fool", "orientation": "upright", "position": "past" },
+    { "name": "The Tower", "orientation": "reversed", "position": "present" },
+    { "name": "The Star", "orientation": "upright", "position": "future" }
+  ]
+}
+```
 
 ## Configuration
-Edit `config.js`:
-```js
-window.TAROT_API_BASE = "http://localhost:8080"; // backend base URL
-window.TAROT_API_TIMEOUT_MS = 50000;             // fall back to local after this
-```
-Leave `TAROT_API_BASE` empty (`""`) to force the local fallback generator.
+
+**Frontend** (`config.js`):
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `TAROT_FORCE_LOCAL` | `false` | Skip API; use local template only |
+| `TAROT_API_BASE` | `""` | Empty = same-origin; or full backend URL |
+| `TAROT_API_TIMEOUT_MS` | `50000` | Abort API call after this (ms) |
+
+**Backend** (environment):
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `OPENAI_API_KEY` | — | Required for AI readings and RAG embeddings |
+| `TAROT_MODEL` | `gpt-4o` | Main reading model |
+| `TAROT_CLASSIFIER_MODEL` | `gpt-4o-mini` | Question domain classifier |
+| `TAROT_EMBED_MODEL` | `text-embedding-3-small` | Corpus embeddings |
+| `TAROT_CORS_ORIGINS` | `*` | Comma-separated CORS origins |
+
+Without `OPENAI_API_KEY`, the retriever runs in deterministic-only mode and LLM
+calls fail gracefully (the frontend falls back locally).
 
 ## Data & asset provenance
-- **Card meanings**: A.E. Waite, *The Pictorial Key to the Tarot* (1910) — public domain; plus CC0 light/shadow facets + divinatory cues from [dariusk/corpora](https://github.com/dariusk/corpora). Curated in `agents/.../tarot_reading_agent/data/major_arcana.json` (see its `_provenance`).
-- **Card art** (`assets/cards/00.jpg … 21.jpg`): the original 1909 Rider-Waite-Smith Major Arcana by Pamela Colman Smith — public domain in the US (via Wikimedia Commons).
+
+- **Card meanings**: A.E. Waite, *The Pictorial Key to the Tarot* (1910) — public domain; plus CC0 light/shadow facets and divinatory cues from [dariusk/corpora](https://github.com/dariusk/corpora). Curated in `backend/tarot/data/major_arcana.json`.
+- **Card art** (`assets/cards/00.jpg` … `21.jpg`): 1909 Rider-Waite-Smith Major Arcana by Pamela Colman Smith — public domain in the US (via Wikimedia Commons).
 
 ## Scope (PoC)
-- ✅ AI-powered, domain-aware readings + lead capture form (client-side).
-- ⏳ Phase 2 (deferred): persist leads, email reading as PDF, calendar/consultation booking.
 
-Lead capture currently validates and holds name/email/phone in browser state only.
-Persisting leads is a Phase 2 backend hook.
+- ✅ Standalone deploy (UI + API + local RAG)
+- ✅ AI-powered readings + client-side lead capture form
+- ⏳ Phase 2: persist leads, email reading as PDF, calendar booking
+
+Lead capture validates and holds name/email/phone in browser state only.

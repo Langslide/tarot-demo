@@ -786,7 +786,8 @@ async function renderStep6() {
 
 // Call the backend AI tarot endpoint with the three drawn cards.
 async function fetchAIReading() {
-  const base = (window.TAROT_API_BASE || '').replace(/\/$/, '');
+  if (window.TAROT_FORCE_LOCAL) return null;
+  const base = (window.TAROT_API_BASE || window.location.origin).replace(/\/$/, '');
   if (!base) return null;
 
   const payload = {
