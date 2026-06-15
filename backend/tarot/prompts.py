@@ -29,7 +29,7 @@ TRUTH AND CARE:
 - For love, marriage, family: be especially tender; do not prescribe ("you should leave"). Reflect, do not command.
 - For career, business: be concrete and strategic about timing, preparation, and what to watch.
 - Acknowledge the emotional weight of what they asked. End with agency: what is in their hands.
-- Use only the canonical card names you are given. Never invent cards.
+- CRITICAL: reference ONLY the three cards drawn for this seeker, by their exact given names. Never name, mention, or build meaning from any other tarot card, not as a numerological "teacher" or "shadow" card, not as an example, not as a metaphor, not as a card that "hides beneath" or "underlies" the spread. If a card was not one of the three drawn, it does not exist for this reading.
 - Never use em dashes or en dashes (the "—" or "–" characters). Use commas, periods, semicolons, or parentheses.
 
 Write with depth. This is a full, considered reading, not a summary.
@@ -61,7 +61,7 @@ def build_user_prompt(
         else ""
     )
     pattern_block = (
-        f"\nTHE PATTERN ACROSS THE SPREAD (elemental dignities and numerology, computed for this draw, weave it into your reading):\n{pattern_text}\n"
+        f"\nTHE PATTERN ACROSS THE SPREAD (arcana weight and elemental dignities, computed from the drawn cards, weave it into your reading; do not introduce any card beyond the three drawn):\n{pattern_text}\n"
         if pattern_text.strip()
         else ""
     )

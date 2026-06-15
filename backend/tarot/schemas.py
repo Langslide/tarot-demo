@@ -98,7 +98,7 @@ class LLMCardReading(BaseModel):
 class ReadingLLMSchema(BaseModel):
     analysis: str = Field(description=(
         "PRIVATE planning notes, never shown to the seeker. In 4 to 6 sentences, think through how the three cards "
-        "interact (which reinforces or undercuts which), how the elemental and numerology pattern colours the answer, "
+        "interact (which reinforces or undercuts which), how the elemental and arcana pattern colours the answer, "
         "and the specific details the seeker shared. Use this to make every later section concrete and connected."
     ))
     opening: str = Field(description=(
@@ -113,7 +113,7 @@ class ReadingLLMSchema(BaseModel):
     ))
     synthesis: str = Field(description=(
         "8 to 10 sentences weaving all three cards into one in-depth narrative that answers THIS seeker's specific "
-        "question, naming them and their concrete details, integrating the pattern (elements/numerology), honest and "
+        "question, naming them and their concrete details, integrating the pattern (elements/arcana weight), honest and "
         "non-prescriptive, ending with grounded agency. This is the centrepiece, make it substantial. No em dashes."
     ))
     direct_answer: str = Field(description=(

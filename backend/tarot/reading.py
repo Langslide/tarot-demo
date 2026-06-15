@@ -10,10 +10,12 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 
 from langchain_openai import ChatOpenAI
 
 from .analysis import analyze_spread
+from .cards import MAJOR_ARCANA
 from .knowledge import POSITION_FRAME_LABEL, build_card_grounding
 from .prompts import (
     FOLLOWUP_SYSTEM_PROMPT,
@@ -54,6 +56,44 @@ def _strip_em_dashes(text: str) -> str:
     text = text.replace("—", ", ").replace("–", "-")
     text = text.replace(" ,", ",").replace("  ", " ")
     return text.strip()
+
+
+# All 22 canonical Major Arcana names, longest first, matched as whole words and
+# case-sensitively (canonical Title Case) so common words like "death" or "the
+# sun" in ordinary prose are not mistaken for cards. Used to guarantee a reading
+# never references a card the seeker did not draw.
+_ALL_CARD_NAMES = sorted((c["name"] for c in MAJOR_ARCANA), key=len, reverse=True)
+_CARD_NAME_RE = re.compile(r"\b(" + "|".join(re.escape(n) for n in _ALL_CARD_NAMES) + r")\b")
+# Split prose into sentences on terminal punctuation followed by whitespace.
+_SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
+
+
+def _undrawn_card_names(text: str, drawn: set[str]) -> set[str]:
+    """Canonical card names that appear in ``text`` but were not drawn."""
+    if not text:
+        return set()
+    return {n for n in _CARD_NAME_RE.findall(text) if n not in drawn}
+
+
+def _scrub_undrawn_cards(text: str, drawn: set[str], *, where: str = "") -> str:
+    """Drop any sentence that names a card outside the seeker's draw.
+
+    Last line of defence against hallucinated cards: the systematic causes
+    (numerology 'teacher card', combination RAG passages) are removed upstream,
+    but if the model still names an undrawn card we remove that sentence rather
+    than show a card the seeker never drew.
+    """
+    if not text or not _undrawn_card_names(text, drawn):
+        return text
+    sentences = _SENTENCE_SPLIT_RE.split(text)
+    kept = []
+    for s in sentences:
+        leaked = _undrawn_card_names(s, drawn)
+        if leaked:
+            logger.warning("Dropped sentence naming undrawn card(s) %s in %s", sorted(leaked), where or "reading")
+            continue
+        kept.append(s)
+    return " ".join(kept).strip()
 
 
 def _heuristic_category(question: str) -> str:
@@ -184,17 +224,29 @@ def _build_grounding(cards: list[DrawnCard], category_key: str) -> str:
     )
 
 
-def _retrieve_guidance(cards: list[DrawnCard], question: str, category_key: str, k: int = 5) -> str:
-    """Semantic RAG: pull question-relevant interpretive passages from the corpus."""
+def _retrieve_guidance(cards: list[DrawnCard], question: str, category_key: str, k: int = 6) -> str:
+    """Semantic RAG: pull question-relevant interpretive passages from the corpus.
+
+    Any passage that names a card the seeker did not draw (e.g. a card-combination
+    passage about The Tower + The Star) is dropped, so the model is never primed
+    with cards outside this spread.
+    """
+    drawn = {c.name for c in cards}
     card_phrase = ", ".join(f"{c.name} {c.orientation}" for c in cards)
     query = f"{category_key} reading. Question: {question}. Cards: {card_phrase}."
+    # Retrieve a few extra to absorb passages dropped by the undrawn-card filter.
     docs = get_tarot_retriever().retrieve(query, k=k)
     seen, lines = set(), []
     for d in docs:
         text = d.page_content.strip()
-        if text and text not in seen:
-            seen.add(text)
-            lines.append(f"- {text}")
+        if not text or text in seen:
+            continue
+        leaked = _undrawn_card_names(text, drawn)
+        if leaked:
+            logger.debug("Skipped guidance passage naming undrawn card(s) %s", sorted(leaked))
+            continue
+        seen.add(text)
+        lines.append(f"- {text}")
     return "\n".join(lines)
 
 
@@ -243,25 +295,40 @@ def generate_reading(
         # with_structured_output returns a ReadingLLMSchema instance (or dict).
         data = parsed if isinstance(parsed, ReadingLLMSchema) else ReadingLLMSchema(**parsed)
 
+        # Cards actually drawn, by canonical name; nothing outside this set may
+        # appear anywhere in the reading.
+        drawn_names = {c.name for c in cards}
+
         interpretations = []
         for i, c in enumerate(data.cards):
             # Deterministic display meta comes from our dataset, not the model.
             src = cards[i] if i < len(cards) else None
             keywords, correspondence = _card_meta(src) if src else ([], "")
+            card_name = str(c.name or normalised[i]["name"])
+            # A card's own block may name itself; allow this card plus any drawn.
+            allowed = drawn_names | {card_name}
+            interp = _scrub_undrawn_cards(
+                _strip_em_dashes(str(c.interpretation).strip()), allowed, where=f"card[{card_name}]"
+            )
             interpretations.append(CardInterpretation(
                 position=str(c.position or normalised[i]["position"]),
-                name=str(c.name or normalised[i]["name"]),
+                name=card_name,
                 orientation=str(c.orientation or normalised[i]["orientation"]),
-                interpretation=_strip_em_dashes(str(c.interpretation).strip()),
+                interpretation=interp,
                 keywords=keywords,
                 correspondence=correspondence,
             ))
-        synthesis = _strip_em_dashes(str(data.synthesis).strip())
+        synthesis = _scrub_undrawn_cards(
+            _strip_em_dashes(str(data.synthesis).strip()), drawn_names, where="synthesis"
+        )
 
         if not interpretations or not synthesis:
             raise ValueError("LLM response missing cards or synthesis")
 
-        g = lambda f: _strip_em_dashes(str(getattr(data, f, "") or "").strip())  # noqa: E731
+        # Strip em dashes, then scrub any sentence naming a card outside the draw.
+        g = lambda f: _scrub_undrawn_cards(  # noqa: E731
+            _strip_em_dashes(str(getattr(data, f, "") or "").strip()), drawn_names, where=f
+        )
         return ReadingResult(
             status="success",
             category=category_key,

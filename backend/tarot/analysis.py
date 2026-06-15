@@ -1,4 +1,4 @@
-"""Deterministic spread analysis: elemental dignities, numerology, arcana weight.
+"""Deterministic spread analysis: elemental dignities and arcana weight.
 
 This is a real tarot interpretation layer computed with no LLM, purely from the
 dataset's per-card correspondences. It is fed to the model as grounding (so the
@@ -7,11 +7,7 @@ prose can cite it) and shown to the seeker as a 'Pattern in Your Cards' section.
 
 from __future__ import annotations
 
-from .cards import MAJOR_ARCANA
 from .sources import get_provider
-
-# id -> canonical name, for mapping a numerology total back to a Major Arcana.
-_ID_TO_NAME = {c["id"]: c["name"] for c in MAJOR_ARCANA}
 
 # Brief plain-language sense of each element's current.
 _ELEMENT_SENSE = {
@@ -38,29 +34,14 @@ def _pair_relationship(a: str, b: str) -> str:
     return "neutral"
 
 
-def _numerology(numbers: list[int]) -> tuple[int, str]:
-    """Sum the card numbers, reduce to <=21, return (total, Major Arcana name)."""
-    total = sum(numbers)
-    while total > 21:
-        total = sum(int(d) for d in str(total))
-    return total, _ID_TO_NAME.get(total, "")
-
-
 def analyze_spread(cards) -> dict:
-    """Compute elemental dignities + numerology + arcana weight for the draw."""
+    """Compute elemental dignities + arcana weight for the draw (drawn cards only)."""
     recs = [(c, get_provider().get(c.name)) for c in cards]
     elements = [
         (rec.get("correspondences", {}).get("element") if rec else None)
         for _, rec in recs
     ]
     elements = [e for e in elements if e]
-    numbers = []
-    for _, rec in recs:
-        if rec:
-            try:
-                numbers.append(int(rec.get("correspondences", {}).get("numerology", rec.get("id", 0))))
-            except (TypeError, ValueError):
-                numbers.append(int(rec.get("id", 0)))
 
     # Elemental tally + dominant element.
     counts: dict[str, int] = {}
@@ -92,28 +73,23 @@ def analyze_spread(cards) -> dict:
         present = ", ".join(f"{_ELEMENT_SENSE.get(e, e)}" for e in counts)
         balance = f"The spread leans on {present}."
 
-    total, teacher = _numerology(numbers)
-    numerology_note = (
-        f"Summed and reduced, your cards point to {teacher} ({total}) as the quiet teacher beneath the question, "
-        f"the lesson the whole spread is circling."
-        if teacher else ""
-    )
-
     majors_note = (
         "All three cards are Major Arcana, which marks this as a pivotal, soul-level matter, "
         "the kind of turning point that shapes a chapter of life rather than a passing day."
     )
 
-    pattern_text = " ".join(p for p in [majors_note, balance, dignity, numerology_note] if p)
+    # NOTE: numerology "teacher card" deliberately omitted. Summing the drawn
+    # cards and naming the resulting Major Arcana introduces a card that was
+    # never drawn (e.g. The Tower), which reads as a hallucination to the seeker
+    # and gets woven through the LLM reading. The pattern stays strictly to the
+    # cards actually on the table: arcana weight, elemental balance, dignities.
+    pattern_text = " ".join(p for p in [majors_note, balance, dignity] if p)
 
     return {
         "elements": counts,
         "dominant_element": dominant,
         "dignity": dignity,
         "balance": balance,
-        "numerology_total": total,
-        "numerology_card": teacher,
-        "numerology_note": numerology_note,
         "majors_note": majors_note,
         "pattern_text": pattern_text,
     }
