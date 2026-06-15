@@ -328,6 +328,18 @@ function generateReading(drawnCards, question, category, categoryKey, seekerName
 const messagesEl = document.getElementById('chatMessages');
 const inputAreaEl = document.getElementById('chatInputArea');
 
+function scrollChatbotIntoView() {
+  const oracleSection = document.getElementById('oracle');
+  if (oracleSection) {
+    const rect = oracleSection.getBoundingClientRect();
+    const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+    // If less than 150px of the chatbot is visible, scroll it into view
+    if (visibleHeight < 150) {
+      oracleSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+}
+
 function addMessage(html, type = 'oracle', delay = 0) {
   return new Promise(resolve => {
     setTimeout(() => {
@@ -345,7 +357,11 @@ function addMessage(html, type = 'oracle', delay = 0) {
         wrap.innerHTML = html;
       }
       messagesEl.appendChild(wrap);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
+      scrollToBottom();
+      setTimeout(scrollToBottom, 50);
+      if (type === 'oracle' || type === 'system') {
+        scrollChatbotIntoView();
+      }
       resolve();
     }, delay);
   });
@@ -357,7 +373,9 @@ function showTyping() {
   wrap.id = 'typing-indicator';
   wrap.innerHTML = `<div class="oracle-dot" aria-hidden="true">✦</div><div class="msg msg-oracle"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
   messagesEl.appendChild(wrap);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
+  scrollToBottom();
+  setTimeout(scrollToBottom, 50);
+  scrollChatbotIntoView();
 }
 
 function hideTyping() {
@@ -370,7 +388,10 @@ function clearInput() {
 }
 
 function scrollToBottom() {
-  messagesEl.scrollTop = messagesEl.scrollHeight;
+  messagesEl.scrollTo({
+    top: messagesEl.scrollHeight,
+    behavior: 'smooth'
+  });
 }
 
 // ============================================================
@@ -385,7 +406,7 @@ async function renderStep0() {
   await delay(900);
   hideTyping();
   await addMessage(`
-    <p style="font-family:var(--font-heading);font-size:var(--text-lg);color:var(--accent-gold-glow);margin-bottom:var(--space-3);">Welcome, Seeker.</p>
+    <p style="font-family:var(--font-heading);font-size:var(--text-lg);color:var(--accent-red);margin-bottom:var(--space-3);">Welcome, Seeker.</p>
     <p>I am the Oracle of the Major Arcana, keeper of the 22 sacred archetypes that have mapped the human journey for centuries in the Rider-Waite tradition.</p>
     <p style="margin-top:var(--space-3);">What you carry here, your questions, your fears, your quiet hopes, will be met with honesty, not false comfort. The cards do not lie; nor do they condemn. They illuminate.</p>
     <p style="margin-top:var(--space-3);font-style:italic;color:var(--text-muted);">Before we begin: are you ready to hear what the cards may reveal?</p>
@@ -663,14 +684,33 @@ function submitLead(e) {
 // STEP 4, CARD SELECTION
 async function renderStep4() {
   clearInput();
+  
+  // 1. Show shuffling state first
+  inputAreaEl.innerHTML = `
+    <div class="shuffle-wrapper">
+      <div class="shuffle-deck">
+        <div class="shuffle-card card-1"></div>
+        <div class="shuffle-card card-2"></div>
+        <div class="shuffle-card card-3"></div>
+        <div class="shuffle-card card-4"></div>
+        <div class="shuffle-card card-5"></div>
+      </div>
+      <p class="shuffle-status">Shuffling the Major Arcana...</p>
+    </div>
+  `;
+  
   showTyping();
-  await delay(1000);
+  await delay(1200);
   hideTyping();
+  
   await addMessage(`
     <p>From the 22 sacred cards of the Major Arcana, you must choose <strong style="color:var(--accent-gold)">3</strong>.</p>
-    <p style="margin-top:var(--space-3);">Trust your instincts, do not think. Let your hand be guided. Which cards call to you?</p>
+    <p style="margin-top:var(--space-3);">Trust your instincts — do not think. Let your hand be guided. Which cards call to you?</p>
   `);
-
+  
+  await delay(1500); // Complete shuffle visual
+  
+  // 2. Transition to Grid selection
   renderCardGrid();
 }
 
@@ -679,15 +719,28 @@ function renderCardGrid() {
   inputAreaEl.innerHTML = `
     <div class="card-selection-area">
       <p class="card-counter" id="cardCounter" aria-live="polite">0 of 3 chosen</p>
-      <div class="card-grid" id="cardGrid" role="group" aria-label="22 face-down tarot cards, choose 3">
+      <div class="card-grid" id="cardGrid" role="group" aria-label="22 face-down tarot cards — choose 3">
         ${Array.from({length:22}, (_, i) => `
-          <div>
-            <div class="tarot-card-back" id="card-pos-${i}" onclick="selectCard(${i})" role="button" tabindex="0" aria-label="Card ${i+1}" onkeydown="if(event.key==='Enter'||event.key===' ')selectCard(${i})">
-              <span class="card-number">${i+1}</span>
+          <div class="card-container-3d">
+            <div class="tarot-card-back dealing" id="card-pos-${i}" style="--i: ${i}" onclick="selectCard(${i})" role="button" tabindex="0" aria-label="Card ${i+1}" onkeydown="if(event.key==='Enter'||event.key===' ')selectCard(${i})">
+              <div class="card-inner-design">
+                <span class="card-star star-top-left">✦</span>
+                <span class="card-star star-top-right">✦</span>
+                <span class="card-star star-bottom-left">✦</span>
+                <span class="card-star star-bottom-right">✦</span>
+                <div class="card-center-emblem">
+                  <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="20" cy="20" r="12" stroke="#c9a84c" stroke-width="0.8" opacity="0.4" stroke-dasharray="2 1"/>
+                    <path d="M20 6 L23 15 L32 15 L25 21 L28 30 L20 24 L12 30 L15 21 L8 15 L17 15 Z" fill="none" stroke="#c9a84c" stroke-width="0.8" opacity="0.6"/>
+                    <circle cx="20" cy="20" r="3" fill="#c9a84c" opacity="0.8"/>
+                  </svg>
+                </div>
+                <span class="card-number">${i+1}</span>
+              </div>
             </div>
           </div>
         `).join('')}
-        <div><div class="card-grid-placeholder" aria-hidden="true"></div></div>
+        <div class="card-container-3d"><div class="card-grid-placeholder" aria-hidden="true"></div></div>
       </div>
       <div id="fatesBtn" style="display:none;margin-top:var(--space-4);text-align:center">
         <button class="btn btn-primary" onclick="confirmCards()" aria-label="Confirm your 3 chosen cards">
@@ -698,47 +751,70 @@ function renderCardGrid() {
 }
 
 function selectCard(posIndex) {
+  if (STATE.selectedPositions.length >= 3) return;
+  if (STATE.selectedPositions.includes(posIndex)) return;
+
   const el = document.getElementById(`card-pos-${posIndex}`);
-  if (!el) return;
-  const alreadySelected = STATE.selectedPositions.includes(posIndex);
+  STATE.selectedPositions.push(posIndex);
+  el.classList.add('selected');
+  el.setAttribute('aria-pressed', 'true');
 
-  if (alreadySelected) {
-    // Toggle OFF — deselect this card.
-    STATE.selectedPositions = STATE.selectedPositions.filter(p => p !== posIndex);
-    el.classList.remove('selected');
-    el.removeAttribute('aria-pressed');
-  } else {
-    if (STATE.selectedPositions.length >= 3) return; // can't pick a 4th
-    STATE.selectedPositions.push(posIndex);
-    el.classList.add('selected');
-    el.setAttribute('aria-pressed', 'true');
-  }
+  // Trigger sparkle effect
+  createSparkles(el);
 
-  refreshCardGridState();
-}
-
-// Reflect the current selection: counter, enabled/disabled cards, Fates button.
-function refreshCardGridState() {
   const count = STATE.selectedPositions.length;
   document.getElementById('cardCounter').textContent = `${count} of 3 chosen`;
 
-  const full = count === 3;
-  for (let i = 0; i < 22; i++) {
-    const card = document.getElementById(`card-pos-${i}`);
-    if (!card) continue;
-    const isSelected = STATE.selectedPositions.includes(i);
-    // Disable only the UNSELECTED cards once 3 are chosen; otherwise all clickable.
-    if (full && !isSelected) {
-      card.classList.add('disabled');
-      card.setAttribute('tabindex', '-1');
-      card.setAttribute('aria-disabled', 'true');
-    } else {
-      card.classList.remove('disabled');
-      card.setAttribute('tabindex', '0');
-      card.removeAttribute('aria-disabled');
+  if (count === 3) {
+    // Disable remaining cards
+    for (let i = 0; i < 22; i++) {
+      if (!STATE.selectedPositions.includes(i)) {
+        const card = document.getElementById(`card-pos-${i}`);
+        if (card) {
+          card.classList.add('disabled');
+          card.setAttribute('tabindex', '-1');
+          card.setAttribute('aria-disabled', 'true');
+        }
+      }
     }
+    document.getElementById('fatesBtn').style.display = 'block';
+    
+    // Scroll down to reveal button if needed
+    setTimeout(() => {
+      const fatesBtn = document.getElementById('fatesBtn');
+      if (fatesBtn) fatesBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
   }
-  document.getElementById('fatesBtn').style.display = full ? 'block' : 'none';
+}
+
+function createSparkles(element) {
+  const rect = element.getBoundingClientRect();
+  const bodyRect = document.body.getBoundingClientRect();
+  const parent = document.body;
+  
+  for (let i = 0; i < 10; i++) {
+    const sparkle = document.createElement('div');
+    sparkle.className = 'sparkle-particle';
+    
+    // Spawn around center of card
+    const cardCenterX = rect.left - bodyRect.left + rect.width / 2;
+    const cardCenterY = rect.top - bodyRect.top + rect.height / 2;
+    
+    sparkle.style.left = `${cardCenterX}px`;
+    sparkle.style.top = `${cardCenterY}px`;
+    
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 15 + Math.random() * 35;
+    const tx = Math.cos(angle) * distance;
+    const ty = Math.sin(angle) * distance;
+    
+    sparkle.style.setProperty('--tx', `${tx}px`);
+    sparkle.style.setProperty('--ty', `${ty}px`);
+    sparkle.style.animation = `sparkle-fly 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards`;
+    
+    parent.appendChild(sparkle);
+    setTimeout(() => sparkle.remove(), 600);
+  }
 }
 
 function confirmCards() {
@@ -749,7 +825,7 @@ function confirmCards() {
     position: ['past', 'present', 'future'][i]
   }));
 
-  addMessage('The Fates Are Set, I have chosen my three cards.', 'user');
+  addMessage('The Fates Are Set — I have chosen my three cards.', 'user');
   STATE.step = 5;
   setTimeout(renderStep5, 800);
 }
@@ -787,13 +863,35 @@ async function renderStep5() {
     wrapDiv.innerHTML = `
       <div class="card-flip-container" aria-label="${card.name}">
         <div class="card-flip-inner" id="flip-${i}">
-          <div class="card-back-face" aria-hidden="true">✦</div>
+          <div class="card-back-face" aria-hidden="true">
+            <div class="card-inner-design">
+              <span class="card-star star-top-left">✦</span>
+              <span class="card-star star-top-right">✦</span>
+              <span class="card-star star-bottom-left">✦</span>
+              <span class="card-star star-bottom-right">✦</span>
+              <div class="card-center-emblem">
+                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="20" cy="20" r="12" stroke="#c9a84c" stroke-width="0.8" opacity="0.4" stroke-dasharray="2 1"/>
+                  <path d="M20 6 L23 15 L32 15 L25 21 L28 30 L20 24 L12 30 L15 21 L8 15 L17 15 Z" fill="none" stroke="#c9a84c" stroke-width="0.8" opacity="0.6"/>
+                  <circle cx="20" cy="20" r="3" fill="#c9a84c" opacity="0.8"/>
+                </svg>
+              </div>
+            </div>
+          </div>
           <div class="card-face has-art">
             <img class="card-face-img${isReversed ? ' reversed' : ''}" src="${cardImage(card)}" alt="${card.name}" loading="lazy"
                  onerror="this.closest('.card-face').classList.add('art-failed'); this.remove()">
-            <div class="card-face-symbol" aria-hidden="true">${card.symbol}</div>
-            <div class="card-face-name">${card.name}</div>
-            <div class="card-face-number">${card.number}</div>
+            <div class="card-inner-design">
+              <span class="card-star star-top-left">✦</span>
+              <span class="card-star star-top-right">✦</span>
+              <span class="card-star star-bottom-left">✦</span>
+              <span class="card-star star-bottom-right">✦</span>
+              <div class="card-face-symbol" aria-hidden="true">${card.symbol}</div>
+              <div style="width: 100%">
+                <div class="card-face-name">${card.name}</div>
+                <div class="card-face-number">${card.number}</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -805,11 +903,14 @@ async function renderStep5() {
       </div>`;
     revealRow.appendChild(wrapDiv);
     scrollToBottom();
+    setTimeout(scrollToBottom, 50);
 
     // Trigger flip after a brief pause
     await delay(300);
-    document.getElementById(`flip-${i}`).classList.add('flipped');
+    const flipEl = document.getElementById(`flip-${i}`);
+    if (flipEl) flipEl.classList.add('flipped');
     scrollToBottom();
+    setTimeout(scrollToBottom, 50);
   }
 
   await delay(1800);
@@ -858,6 +959,8 @@ async function renderStep6() {
   wrap.innerHTML = `<div class="oracle-dot" aria-hidden="true">✦</div><div class="msg msg-oracle" style="max-width:100%;width:100%">${readingHtml}</div>`;
   messagesEl.appendChild(wrap);
   scrollToBottom();
+  setTimeout(scrollToBottom, 50);
+  setTimeout(scrollToBottom, 150);
 
   STATE.step = 7;
   setTimeout(renderStep7, 1200);
@@ -1043,7 +1146,7 @@ async function renderStep7() {
 
   const firstName = STATE.lead.name.split(' ')[0];
   await addMessage(`
-    <p style="font-family:var(--font-heading);color:var(--accent-gold-glow);margin-bottom:var(--space-3);">The reading is complete, ${firstName}.</p>
+    <p style="font-family:var(--font-heading);color:var(--accent-red);margin-bottom:var(--space-3);">The reading is complete, ${firstName}.</p>
     <p>The oracle has offered what the cards chose to reveal. What you do with these reflections, how you hold them, question them, and move with or against them, is entirely your own sacred work.</p>
     <p style="margin-top:var(--space-3);font-style:italic;color:var(--text-muted);">May the light you have glimpsed here serve you well.</p>
     <div class="mystical-divider"><span>✦</span></div>
@@ -1098,4 +1201,17 @@ function delay(ms) {
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
   renderStep0();
+
+  // Setup auto-scroll MutationObserver on messagesEl
+  if (messagesEl) {
+    const scrollObserver = new MutationObserver(() => {
+      scrollToBottom();
+    });
+    scrollObserver.observe(messagesEl, { childList: true, subtree: true });
+
+    // Capture load events (e.g. images) inside messagesEl to scroll when they finish loading
+    messagesEl.addEventListener('load', () => {
+      scrollToBottom();
+    }, { capture: true, passive: true });
+  }
 });
