@@ -1,0 +1,20 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# Root Directory: leave blank (repo root). Dockerfile lives at ./Dockerfile.
+
+services:
+  - type: web
+    name: tarot-oracle
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: TAROT_MODEL
+        value: gpt-4o
+      - key: TAROT_LLM_TIMEOUT
+        value: "90"
+      - key: TAROT_MAX_TOKENS
+        value: "3000"
