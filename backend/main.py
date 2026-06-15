@@ -11,8 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from tarot.reading import generate_reading
-from tarot.schemas import ReadingRequest, ReadingResult
+from tarot.reading import generate_followups, generate_reading
+from tarot.schemas import FollowupRequest, FollowupResponse, ReadingRequest, ReadingResult
 
 load_dotenv()
 
@@ -43,6 +43,15 @@ async def tarot_health() -> dict[str, str]:
     return {"status": "healthy"}
 
 
+@app.post("/v1/public/tarot/followups", response_model=FollowupResponse)
+async def tarot_followups(payload: FollowupRequest) -> FollowupResponse:
+    return generate_followups(
+        question=payload.question,
+        category=payload.category,
+        seeker_name=payload.seekerName,
+    )
+
+
 @app.post("/v1/public/tarot/reading", response_model=ReadingResult)
 async def tarot_reading(payload: ReadingRequest) -> ReadingResult:
     return generate_reading(
@@ -50,6 +59,7 @@ async def tarot_reading(payload: ReadingRequest) -> ReadingResult:
         category=payload.category,
         seeker_name=payload.seekerName,
         cards=payload.cards,
+        details=payload.details,
     )
 
 

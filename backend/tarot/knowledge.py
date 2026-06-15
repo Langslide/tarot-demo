@@ -47,6 +47,10 @@ def build_card_grounding(name: str, orientation: str, position: str, domain: str
     # Light facets read with the upright current; shadow facets with the reversed.
     facets = card.get("shadow_meanings" if is_rev else "light_meanings", [])[:3]
     fortune = card.get("fortune_telling", [])[:2]
+    # The Waite imagery lets the reader describe what they literally see on the card.
+    imagery = (card.get("waite_description") or "").strip()
+    if len(imagery) > 320:
+        imagery = imagery[:320].rsplit(" ", 1)[0] + "..."
     corr = card.get("correspondences", {})
     corr_line = ", ".join(
         f"{k}: {v}" for k, v in (
@@ -65,6 +69,8 @@ def build_card_grounding(name: str, orientation: str, position: str, domain: str
         f"  Role in this position: {pos_frame}",
         f"  In this domain: {domain_note}",
     ]
+    if imagery:
+        lines.append(f"  Imagery on the card: {imagery}")
     if facets:
         lines.append(f"  {'Shadow' if is_rev else 'Light'} facets: {'; '.join(facets)}")
     if fortune:

@@ -266,3 +266,6 @@ textarea.form-input{resize:vertical;min-height:100px;line-height:1.7}
 @media(max-width:480px){
   .reading-card-thumb{width:52px;height:88px}
 }
+
+/* Reader's spoken opening (addresses the seeker's actual situation) */
+.reading-opening{font-family:var(--font-body);font-size:var(--text-lg);line-height:1.7;color:var(--accent-gold-glow);font-style:italic;padding:var(--space-4) var(--space-5);border-left:3px solid var(--accent-gold);background:linear-gradient(135deg,rgba(201,168,76,0.08),transparent);border-radius:0 var(--radius-lg) var(--radius-lg) 0}

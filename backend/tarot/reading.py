@@ -14,13 +14,20 @@ import os
 from langchain_openai import ChatOpenAI
 
 from .knowledge import POSITION_FRAME_LABEL, build_card_grounding
-from .prompts import SYSTEM_PROMPT, build_user_prompt
+from .prompts import (
+    FOLLOWUP_SYSTEM_PROMPT,
+    SYSTEM_PROMPT,
+    build_followup_prompt,
+    build_user_prompt,
+)
 from .retriever import get_tarot_retriever
 from .sources import get_provider
 from .schemas import (
     CATEGORY_LABELS,
     CardInterpretation,
+    Clarification,
     DrawnCard,
+    FollowupResponse,
     ReadingLLMSchema,
     ReadingResult,
 )
@@ -80,13 +87,59 @@ def deduce_category(question: str) -> str:
 
 
 def _get_model() -> ChatOpenAI:
-    """GPT-4o tuned for evocative-but-grounded, consistent prose."""
+    """GPT-4o tuned for natural, human-voiced prose (a touch more variation)."""
     return ChatOpenAI(
         model=os.getenv("TAROT_MODEL", "gpt-4o"),
-        temperature=0.6,
+        temperature=float(os.getenv("TAROT_TEMPERATURE", "0.8")),
         api_key=os.getenv("OPENAI_API_KEY"),
-        timeout=float(os.getenv("TAROT_LLM_TIMEOUT", "45")),
+        timeout=float(os.getenv("TAROT_LLM_TIMEOUT", "60")),
     )
+
+
+def _format_clarifications(details: list[Clarification] | None) -> str:
+    """Render the seeker's follow-up answers for the prompt (skip empty answers)."""
+    if not details:
+        return ""
+    lines = []
+    for d in details:
+        q = (d.question or "").strip()
+        a = (d.answer or "").strip()
+        if a:
+            lines.append(f"- You asked: {q}\n  They answered: {a}" if q else f"- {a}")
+    return "\n".join(lines)
+
+
+def generate_followups(*, question: str, category: str, seeker_name: str) -> FollowupResponse:
+    """Generate 1-2 tailored clarifying questions before the reading."""
+    if not (question or "").strip():
+        return FollowupResponse(status="success", questions=[])
+    category_key = category if category in CATEGORY_LABELS else deduce_category(question)
+    category_label = CATEGORY_LABELS[category_key]
+    first_name = (seeker_name or "Seeker").split(" ")[0]
+    try:
+        model = ChatOpenAI(
+            model=os.getenv("TAROT_CLASSIFIER_MODEL", "gpt-4o-mini"),
+            temperature=0.4,
+            api_key=os.getenv("OPENAI_API_KEY"),
+            timeout=float(os.getenv("TAROT_LLM_TIMEOUT", "60")),
+        )
+        resp = model.invoke([
+            {"role": "system", "content": FOLLOWUP_SYSTEM_PROMPT},
+            {"role": "user", "content": build_followup_prompt(
+                seeker_name=first_name, question=question, category_label=category_label)},
+        ])
+        raw = str(resp.content)
+        # Parse lines, stripping bullets/numbering; keep up to 2 real questions.
+        questions = []
+        for line in raw.splitlines():
+            t = line.strip().lstrip("-*0123456789.) ").strip()
+            t = _strip_em_dashes(t)
+            if len(t) > 4:
+                questions.append(t)
+        return FollowupResponse(status="success", questions=questions[:2])
+    except Exception as exc:  # noqa: BLE001 — non-fatal; reading proceeds without follow-ups
+        logger.warning("Follow-up generation failed: %s", exc)
+        return FollowupResponse(status="success", questions=[])
 
 
 def _normalised_card(card: DrawnCard) -> dict:
@@ -149,6 +202,7 @@ def generate_reading(
     category: str,
     seeker_name: str,
     cards: list[DrawnCard],
+    details: list[Clarification] | None = None,
 ) -> ReadingResult:
     """Produce an AI tarot reading grounded in the dataset + semantic guidance."""
     if not cards:
@@ -160,7 +214,9 @@ def generate_reading(
     first_name = (seeker_name or "Seeker").split(" ")[0]
 
     grounding = _build_grounding(cards, category_key)
-    retrieved = _retrieve_guidance(cards, question, category_key)
+    # Fold the seeker's own answers into the retrieval query for sharper guidance.
+    clarifications = _format_clarifications(details)
+    retrieved = _retrieve_guidance(cards, f"{question} {clarifications}", category_key)
     normalised = [_normalised_card(c) for c in cards]
 
     user_prompt = build_user_prompt(
@@ -169,6 +225,7 @@ def generate_reading(
         category_label=category_label,
         cards_context=grounding,
         retrieved_guidance=retrieved,
+        clarifications=clarifications,
     )
 
     try:
@@ -204,6 +261,7 @@ def generate_reading(
             status="success",
             category=category_key,
             category_label=category_label,
+            opening=_strip_em_dashes(str(getattr(data, "opening", "") or "").strip()),
             cards=interpretations,
             synthesis=synthesis,
             advice=_strip_em_dashes(str(data.advice or "").strip()),

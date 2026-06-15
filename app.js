@@ -170,6 +170,7 @@ const STATE = {
   shuffledDeck: [],
   selectedPositions: [],   // indices 0-21 of grid positions chosen by user
   drawnCards: [],          // [{cardIndex, orientation, position}]
+  details: [],             // [{question, answer}] tailored follow-ups the seeker answered
   aiReading: null,         // AI response from backend, or null when local fallback used
   fullReadingText: ''
 };
@@ -488,9 +489,87 @@ async function renderStep2() {
 function selectCategory(label, key) {
   STATE.category = label;
   STATE.categoryKey = key;
+  STATE.details = [];
   addMessage(label, 'user');
+  STATE.step = 2.5;
+  setTimeout(renderFollowups, 700);
+}
+
+// STEP 2.5, TAILORED FOLLOW-UP QUESTIONS (a real reader probes for detail first)
+async function renderFollowups() {
+  clearInput();
+  showTyping();
+  let questions = [];
+  try {
+    questions = await fetchFollowups();
+  } catch (err) {
+    console.warn('Follow-up questions unavailable, skipping:', err);
+  }
+  hideTyping();
+
+  // No backend / no questions: skip straight to lead capture.
+  if (!questions || !questions.length) {
+    STATE.step = 3;
+    return renderStep3();
+  }
+
+  await addMessage(`
+    <p>Before I lay the cards, tell me a little more, it helps me read true.</p>
+    <p style="margin-top:var(--space-3);font-style:italic;color:var(--text-muted);">Answer in your own words. You may leave one blank if it does not fit.</p>
+  `);
+
+  inputAreaEl.innerHTML = `
+    <form class="oracle-form" id="followupForm" onsubmit="submitFollowups(event)" novalidate>
+      ${questions.map((q, i) => `
+        <div class="form-group">
+          <label class="form-label" for="fu-${i}">${esc(q)}</label>
+          <textarea class="form-input" id="fu-${i}" rows="2" data-question="${esc(q)}" placeholder="Your answer..."></textarea>
+        </div>`).join('')}
+      <button type="submit" class="btn btn-primary" style="align-self:flex-start">The Cards May Now Hear Me</button>
+    </form>`;
+  const first = document.getElementById('fu-0');
+  if (first) first.focus();
+}
+
+function submitFollowups(e) {
+  e.preventDefault();
+  const fields = [...document.querySelectorAll('#followupForm textarea')];
+  STATE.details = fields.map(f => ({
+    question: f.getAttribute('data-question') || '',
+    answer: f.value.trim()
+  })).filter(d => d.answer);
+
+  // Echo a brief acknowledgement of what they shared (or that they kept it close).
+  if (STATE.details.length) {
+    const shared = STATE.details.map(d => d.answer).join(' / ');
+    addMessage(shared.length > 160 ? shared.substring(0, 160) + '…' : shared, 'user');
+  } else {
+    addMessage('I would rather let the cards speak.', 'user');
+  }
   STATE.step = 3;
   setTimeout(renderStep3, 700);
+}
+
+// Ask the backend for 1-2 tailored clarifying questions.
+async function fetchFollowups() {
+  if (window.TAROT_FORCE_LOCAL) return [];
+  const base = (window.TAROT_API_BASE || window.location.origin).replace(/\/$/, '');
+  if (!base) return [];
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), (window.TAROT_API_TIMEOUT_MS || 50000));
+  try {
+    const res = await fetch(`${base}/v1/public/tarot/followups`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: STATE.question, category: STATE.categoryKey, seekerName: STATE.lead.name || 'Seeker' }),
+      signal: controller.signal
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data && data.questions) || [];
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 // Lightweight keyword deducer for the offline fallback (backend does the smart one).
@@ -798,7 +877,8 @@ async function fetchAIReading() {
       name: MAJOR_ARCANA[d.cardIndex].name,
       orientation: d.orientation,
       position: d.position
-    }))
+    })),
+    details: STATE.details || []   // the seeker's follow-up answers, woven into the reading
   };
 
   const controller = new AbortController();
@@ -820,7 +900,12 @@ async function fetchAIReading() {
 // Render the AI response into the existing reading CSS structure.
 function renderAIReading(aiReading, seekerName) {
   let html = `<div class="reading-container">`;
-  html += `<p class="reading-intro">✦ ${esc(seekerName)}, the three cards that have come forward carry a unified message. Read each layer carefully, they speak together, not separately.</p>`;
+  // The reader's opening, spoken to the seeker about their actual situation.
+  if (aiReading.opening && aiReading.opening.trim()) {
+    html += `<p class="reading-opening">${esc(aiReading.opening)}</p>`;
+  } else {
+    html += `<p class="reading-intro">✦ ${esc(seekerName)}, the three cards that have come forward carry a unified message. Read each layer carefully, they speak together, not separately.</p>`;
+  }
 
   aiReading.cards.forEach((c, index) => {
     const draw = STATE.drawnCards[index];
@@ -891,6 +976,7 @@ function buildReadingPlainText() {
   text += `${'='.repeat(50)}\n\n`;
 
   const ai = STATE.aiReading;
+  if (ai && ai.opening) text += `${ai.opening}\n\n`;
   STATE.drawnCards.forEach((draw, i) => {
     const card = MAJOR_ARCANA[draw.cardIndex];
     const isReversed = draw.orientation === 'reversed';
@@ -965,6 +1051,7 @@ function resetReading() {
   STATE.shuffledDeck = [];
   STATE.selectedPositions = [];
   STATE.drawnCards = [];
+  STATE.details = [];
   STATE.aiReading = null;
   STATE.fullReadingText = '';
   STATE.lead = savedLead;
