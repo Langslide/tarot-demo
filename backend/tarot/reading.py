@@ -13,6 +13,7 @@ import os
 
 from langchain_openai import ChatOpenAI
 
+from .analysis import analyze_spread
 from .knowledge import POSITION_FRAME_LABEL, build_card_grounding
 from .prompts import (
     FOLLOWUP_SYSTEM_PROMPT,
@@ -92,7 +93,8 @@ def _get_model() -> ChatOpenAI:
         model=os.getenv("TAROT_MODEL", "gpt-4o"),
         temperature=float(os.getenv("TAROT_TEMPERATURE", "0.8")),
         api_key=os.getenv("OPENAI_API_KEY"),
-        timeout=float(os.getenv("TAROT_LLM_TIMEOUT", "60")),
+        timeout=float(os.getenv("TAROT_LLM_TIMEOUT", "90")),
+        max_tokens=int(os.getenv("TAROT_MAX_TOKENS", "3000")),
     )
 
 
@@ -217,6 +219,7 @@ def generate_reading(
     # Fold the seeker's own answers into the retrieval query for sharper guidance.
     clarifications = _format_clarifications(details)
     retrieved = _retrieve_guidance(cards, f"{question} {clarifications}", category_key)
+    spread = analyze_spread(cards)   # deterministic elemental/numerology pattern
     normalised = [_normalised_card(c) for c in cards]
 
     user_prompt = build_user_prompt(
@@ -226,6 +229,7 @@ def generate_reading(
         cards_context=grounding,
         retrieved_guidance=retrieved,
         clarifications=clarifications,
+        pattern_text=spread["pattern_text"],
     )
 
     try:
@@ -257,16 +261,23 @@ def generate_reading(
         if not interpretations or not synthesis:
             raise ValueError("LLM response missing cards or synthesis")
 
+        g = lambda f: _strip_em_dashes(str(getattr(data, f, "") or "").strip())  # noqa: E731
         return ReadingResult(
             status="success",
             category=category_key,
             category_label=category_label,
-            opening=_strip_em_dashes(str(getattr(data, "opening", "") or "").strip()),
+            opening=g("opening"),
             cards=interpretations,
+            card_connections=g("card_connections"),
+            pattern=_strip_em_dashes(spread["pattern_text"]),
             synthesis=synthesis,
-            advice=_strip_em_dashes(str(data.advice or "").strip()),
-            reflection_question=_strip_em_dashes(str(data.reflection_question or "").strip()),
-            affirmation=_strip_em_dashes(str(data.affirmation or "").strip()),
+            direct_answer=g("direct_answer"),
+            strengths=g("strengths"),
+            challenges=g("challenges"),
+            embrace_release=g("embrace_release"),
+            advice=g("advice"),
+            reflection_question=g("reflection_question"),
+            affirmation=g("affirmation"),
             timing=_overall_timing(cards),
         )
 

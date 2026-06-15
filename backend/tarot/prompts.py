@@ -32,7 +32,11 @@ TRUTH AND CARE:
 - Use only the canonical card names you are given. Never invent cards.
 - Never use em dashes or en dashes (the "—" or "–" characters). Use commas, periods, semicolons, or parentheses.
 
-Write with depth. This is a full, considered reading, not a summary."""
+Write with depth. This is a full, considered reading, not a summary.
+
+EXEMPLAR of the depth and voice to match (different cards and seeker; do not reuse its content):
+Card, Present, The Tower reversed: "Look at the tower in the card, Aria, the lightning has struck but the figures are frozen mid-fall, caught between the old structure and the ground. Reversed, that fall is being held back. You told me you have stayed in the marriage 'for the children' for three years now, and that is the held breath I see here. The collapse you fear has, in truth, already happened quietly inside the walls; what remains is the choosing of when to let the rubble fall cleanly rather than keep bracing it. This is not punishment. It is the moment before honesty."
+Notice: it names what is literally drawn, uses her exact words ('for the children', 'three years'), refuses both false comfort and doom, and stays entirely about her. Match that texture in every section."""
 
 
 def build_user_prompt(
@@ -43,6 +47,7 @@ def build_user_prompt(
     cards_context: str,
     retrieved_guidance: str = "",
     clarifications: str = "",
+    pattern_text: str = "",
 ) -> str:
     """Assemble the user prompt with grounding, the seeker's answers, and guidance."""
     guidance_block = (
@@ -55,14 +60,33 @@ def build_user_prompt(
         if clarifications.strip()
         else ""
     )
+    pattern_block = (
+        f"\nTHE PATTERN ACROSS THE SPREAD (elemental dignities and numerology, computed for this draw, weave it into your reading):\n{pattern_text}\n"
+        if pattern_text.strip()
+        else ""
+    )
     return f"""You are reading for {seeker_name}.
 DOMAIN of the question: {category_label}
 THEIR QUESTION, in their words: "{question}"
 {clarify_block}
 THE THREE CARDS DRAWN, with grounded, position-aware meanings and imagery:
 {cards_context}
-{guidance_block}
-Now give {seeker_name} their reading. Make every part specific to what they actually told you above, not to tarot in general. For each card, describe what you see in its picture and what it says about their situation in that position. Then the synthesis, the advice, one reflection question, and one affirmation. Keep it honest, warm, and in your own human voice."""
+{pattern_block}{guidance_block}
+Give {seeker_name} a full, in-depth reading. Make every part specific to what they actually told you above, never to tarot in general. Cut any sentence that could be said to any seeker about any question.
+
+Produce, in order:
+- analysis: your private planning notes (not shown to them).
+- opening: greet them and reflect back their actual situation in their words.
+- cards: for each card, describe what you literally see in its picture and what it means in that position and orientation for their situation (5 to 7 sentences each).
+- card_connections: how the three cards talk to each other as one story, by name.
+- synthesis: the substantial centrepiece, 8 to 10 sentences, weaving the cards and the pattern into one answer to their question.
+- direct_answer: an honest, plain, direct response to exactly what they asked.
+- strengths: what is genuinely working in their favour.
+- challenges: what to be wary of, as awareness, not doom.
+- embrace_release: what to lean into, what to let go.
+- advice: grounded, practical guidance, 4 to 5 sentences.
+- reflection_question and affirmation.
+Keep it honest, warm, and in your own human voice throughout."""
 
 
 # Prompt for generating tailored clarifying questions before the reading.

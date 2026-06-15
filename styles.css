@@ -269,3 +269,15 @@ textarea.form-input{resize:vertical;min-height:100px;line-height:1.7}
 
 /* Reader's spoken opening (addresses the seeker's actual situation) */
 .reading-opening{font-family:var(--font-body);font-size:var(--text-lg);line-height:1.7;color:var(--accent-gold-glow);font-style:italic;padding:var(--space-4) var(--space-5);border-left:3px solid var(--accent-gold);background:linear-gradient(135deg,rgba(201,168,76,0.08),transparent);border-radius:0 var(--radius-lg) var(--radius-lg) 0}
+
+/* In-depth analysis section accents (iteration 5) */
+.reading-extra-connections{border-color:rgba(168,85,247,0.3);background:linear-gradient(135deg,rgba(168,85,247,0.08),transparent)}
+.reading-extra-pattern{border-color:rgba(201,168,76,0.35);background:linear-gradient(135deg,rgba(201,168,76,0.07),transparent)}
+.reading-extra-pattern h3{color:var(--accent-gold-glow)}
+.reading-extra-answer{border-color:rgba(124,58,237,0.4);background:linear-gradient(135deg,rgba(124,58,237,0.1),transparent)}
+.reading-extra-answer h3{color:var(--accent-amethyst)}
+.reading-extra-strengths{border-color:rgba(110,231,183,0.3)}
+.reading-extra-strengths h3{color:#6ee7b7}
+.reading-extra-challenges{border-color:rgba(251,191,113,0.3)}
+.reading-extra-challenges h3{color:#fbbf71}
+.reading-extra-embrace h3{color:var(--accent-gold)}

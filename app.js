@@ -934,6 +934,19 @@ function renderAIReading(aiReading, seekerName) {
       </div>`;
   });
 
+  // Sections that come BEFORE the synthesis centrepiece.
+  const preSynthesis = [
+    ['How Your Cards Speak to Each Other', aiReading.card_connections, 'connections'],
+    ['The Pattern in Your Cards', aiReading.pattern, 'pattern']
+  ].filter(([, val]) => val && String(val).trim());
+  preSynthesis.forEach(([title, val, cls]) => {
+    html += `
+      <div class="reading-extra reading-extra-${cls}">
+        <h3>✦ ${title}</h3>
+        <p>${esc(val)}</p>
+      </div>`;
+  });
+
   html += `
     <div class="synthesis">
       <h3>✦ THE SYNTHESIS, Reading Your Complete Journey</h3>
@@ -941,10 +954,14 @@ function renderAIReading(aiReading, seekerName) {
     </div>`;
 
   const extras = [
+    ['The Heart of Your Answer', aiReading.direct_answer, 'answer'],
+    ['What Is Working For You', aiReading.strengths, 'strengths'],
+    ['What to Be Wary Of', aiReading.challenges, 'challenges'],
+    ['What to Embrace, What to Release', aiReading.embrace_release, 'embrace'],
     ['Guidance', aiReading.advice, 'advice'],
+    ['Timing', aiReading.timing, 'timing'],
     ['A Question to Sit With', aiReading.reflection_question, 'reflection'],
-    ['Affirmation', aiReading.affirmation, 'affirmation'],
-    ['Timing', aiReading.timing, 'timing']
+    ['Affirmation', aiReading.affirmation, 'affirmation']
   ].filter(([, val]) => val && String(val).trim());
 
   extras.forEach(([title, val, cls]) => {
@@ -992,6 +1009,9 @@ function buildReadingPlainText() {
     }
   });
 
+  if (ai && ai.card_connections) text += `✦ HOW YOUR CARDS SPEAK TO EACH OTHER\n${ai.card_connections}\n\n`;
+  if (ai && ai.pattern) text += `✦ THE PATTERN IN YOUR CARDS\n${ai.pattern}\n\n`;
+
   text += `✦ THE SYNTHESIS\n`;
   text += (ai && ai.synthesis)
     ? ai.synthesis
@@ -999,10 +1019,14 @@ function buildReadingPlainText() {
   text += `\n`;
 
   if (ai) {
+    if (ai.direct_answer) text += `\n✦ THE HEART OF YOUR ANSWER\n${ai.direct_answer}\n`;
+    if (ai.strengths) text += `\n✦ WHAT IS WORKING FOR YOU\n${ai.strengths}\n`;
+    if (ai.challenges) text += `\n✦ WHAT TO BE WARY OF\n${ai.challenges}\n`;
+    if (ai.embrace_release) text += `\n✦ WHAT TO EMBRACE, WHAT TO RELEASE\n${ai.embrace_release}\n`;
     if (ai.advice) text += `\n✦ GUIDANCE\n${ai.advice}\n`;
+    if (ai.timing) text += `\n✦ TIMING\n${ai.timing}\n`;
     if (ai.reflection_question) text += `\n✦ A QUESTION TO SIT WITH\n${ai.reflection_question}\n`;
     if (ai.affirmation) text += `\n✦ AFFIRMATION\n${ai.affirmation}\n`;
-    if (ai.timing) text += `\n✦ TIMING\n${ai.timing}\n`;
   }
 
   text += `\n${'='.repeat(50)}\n`;
