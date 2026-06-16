@@ -1,178 +1,197 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Hope Tarot — Oracle of the Major Arcana</title>
-<meta name="description" content="Receive a deeply honest AI-guided tarot reading from the Major Arcana, never false comfort, never cruelty.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Hope Tarot — Oracle of the Major Arcana</title>
+  <meta name="description"
+    content="Receive a deeply honest AI-guided tarot reading from the Major Arcana, never false comfort, never cruelty.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
-<div class="cosmic-bg"></div>
-<div class="stars-bg"></div>
-<div class="nebula"></div>
+  <div class="cosmic-bg"></div>
+  <div class="stars-bg"></div>
+  <div class="nebula"></div>
 
 
-<div class="page-wrapper">
+  <div class="page-wrapper">
 
-  <!-- HERO BANNER SECTION -->
-  <header class="hero-banner-section">
-    <div class="hero-banner-bg" style="background-image: url('assets/banner.png');"></div>
-    <div class="hero-banner-content">
-      <div class="oracle-sigil" aria-hidden="true">
-        <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Oracle sigil">
-          <circle cx="40" cy="40" r="38" stroke="#c9a84c" stroke-width="1" stroke-dasharray="4 3" opacity="0.5"/>
-          <circle cx="40" cy="40" r="30" stroke="#7c3aed" stroke-width="0.8" opacity="0.4"/>
-          <polygon points="40,6 49,34 78,34 55,52 64,78 40,62 16,78 25,52 2,34 31,34" fill="none" stroke="#c9a84c" stroke-width="1" opacity="0.7"/>
-          <circle cx="40" cy="40" r="6" fill="#c9a84c" opacity="0.8"/>
-          <circle cx="40" cy="40" r="3" fill="#e8c96d"/>
-          <line x1="40" y1="14" x2="40" y2="22" stroke="#a855f7" stroke-width="0.8" opacity="0.6"/>
-          <line x1="66" y1="27" x2="60" y2="31" stroke="#a855f7" stroke-width="0.8" opacity="0.6"/>
-          <line x1="66" y1="53" x2="60" y2="49" stroke="#a855f7" stroke-width="0.8" opacity="0.6"/>
-          <line x1="40" y1="66" x2="40" y2="58" stroke="#a855f7" stroke-width="0.8" opacity="0.6"/>
-          <line x1="14" y1="53" x2="20" y2="49" stroke="#a855f7" stroke-width="0.8" opacity="0.6"/>
-          <line x1="14" y1="27" x2="20" y2="31" stroke="#a855f7" stroke-width="0.8" opacity="0.6"/>
-        </svg>
-      </div>
-      <h1 class="hero-title">The Hope Tarot</h1>
-      <p class="hero-subtitle">Oracle of the Major Arcana</p>
-      <p class="hero-tagline-main">Grounding Ancient Wisdom in AI Clarity for the Seekers of Truth</p>
-    </div>
-  </header>
-
-  <!-- CHATBOT SECTION -->
-  <section id="oracle" class="oracle-section-wrapper">
-    <main class="chatbot-panel" role="main" aria-label="Tarot Oracle Chatbot">
-      <div class="chat-messages" id="chatMessages" role="log" aria-live="polite" aria-label="Oracle conversation"></div>
-      <div class="chat-input-area" id="chatInputArea"></div>
-    </main>
-  </section>
-
-  <!-- ABOUT DR. SNEHA JAIN SECTION -->
-  <section id="about" class="info-section about-section">
-    <div class="section-grid">
-      <div class="about-image-wrap">
-        <img src="assets/sneha_jain.png" alt="Dr. Sneha Jain" class="about-image" />
-      </div>
-      <div class="about-text-wrap">
-        <h2 class="section-title">Dr. Sneha Jain</h2>
-        <h3 class="section-subtitle">Founder, The Hope Tarot</h3>
-        <p class="about-description">
-          Dr. Sneha Jain holds a PhD in Spiritual Healing and is the visionary founder of <strong>The Hope Tarot</strong>. With over 19 years of profound experience in Tarot Reading, Astrology, Face Reading, and Energy Healing, she has guided thousands of seekers worldwide toward clarity, transformation, and inner strength.
-        </p>
-        <p class="about-description">
-          Her readings are dedicated to empowering individuals with truth rather than false predictions. She offers practical, spiritual remedies to align your life alignment and overcome structural hurdles.
-        </p>
-        <div class="about-badges">
-          <div class="about-badge"><span>✦</span> 19+ Years Experience</div>
-          <div class="about-badge"><span>✦</span> PhD in Spiritual Healing</div>
-          <div class="about-badge"><span>✦</span> 100k+ YouTube Community</div>
+    <!-- HERO BANNER SECTION -->
+    <header class="hero-banner-section">
+      <div class="hero-banner-bg" style="background-image: url('assets/banner.png');"></div>
+      <div class="hero-banner-content">
+        <div class="oracle-sigil" aria-hidden="true">
+          <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Oracle sigil">
+            <circle cx="40" cy="40" r="38" stroke="#c9a84c" stroke-width="1" stroke-dasharray="4 3" opacity="0.5" />
+            <circle cx="40" cy="40" r="30" stroke="#7c3aed" stroke-width="0.8" opacity="0.4" />
+            <polygon points="40,6 49,34 78,34 55,52 64,78 40,62 16,78 25,52 2,34 31,34" fill="none" stroke="#c9a84c"
+              stroke-width="1" opacity="0.7" />
+            <circle cx="40" cy="40" r="6" fill="#c9a84c" opacity="0.8" />
+            <circle cx="40" cy="40" r="3" fill="#e8c96d" />
+            <line x1="40" y1="14" x2="40" y2="22" stroke="#a855f7" stroke-width="0.8" opacity="0.6" />
+            <line x1="66" y1="27" x2="60" y2="31" stroke="#a855f7" stroke-width="0.8" opacity="0.6" />
+            <line x1="66" y1="53" x2="60" y2="49" stroke="#a855f7" stroke-width="0.8" opacity="0.6" />
+            <line x1="40" y1="66" x2="40" y2="58" stroke="#a855f7" stroke-width="0.8" opacity="0.6" />
+            <line x1="14" y1="53" x2="20" y2="49" stroke="#a855f7" stroke-width="0.8" opacity="0.6" />
+            <line x1="14" y1="27" x2="20" y2="31" stroke="#a855f7" stroke-width="0.8" opacity="0.6" />
+          </svg>
         </div>
+        <h1 class="hero-title">The Hope Tarot</h1>
+        <p class="hero-subtitle">Oracle of the Major Arcana</p>
+        <p class="hero-tagline-main">Grounding Ancient Wisdom in AI Clarity for the Seekers of Truth</p>
       </div>
-    </div>
-  </section>
+    </header>
 
-  <!-- SERVICES SECTION -->
-  <section id="services" class="info-section services-section">
-    <h2 class="section-title text-center">Spiritual Services</h2>
-    <h3 class="section-subtitle text-center">Avenues of Healing & Guidance</h3>
-    
-    <div class="services-grid">
-      <div class="service-card">
-        <div class="service-icon">🃏</div>
-        <h4 class="service-card-title">Tarot Card Reading</h4>
-        <p class="service-card-desc">Deeply intuitive readings of the Major and Minor Arcana to uncover current life energies and probable future trajectories.</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon">✨</div>
-        <h4 class="service-card-title">Astrology & Kundli</h4>
-        <p class="service-card-desc">Analyzing cosmic charts to understand planetary alignments, birth charts, and destiny progressions.</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon">👁️</div>
-        <h4 class="service-card-title">Face Reading</h4>
-        <p class="service-card-desc">The ancient art of Physiognomy to read psychological patterns and potential based on facial structures.</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon">💎</div>
-        <h4 class="service-card-title">Crystal Energy Healing</h4>
-        <p class="service-card-desc">Using selected, cleansed, and energized crystals to balance chakras, clear blocks, and attract manifestation.</p>
-      </div>
-    </div>
-  </section>
+    <!-- CHATBOT SECTION -->
+    <section id="oracle" class="oracle-section-wrapper">
+      <main class="chatbot-panel" role="main" aria-label="Tarot Oracle Chatbot">
+        <div class="chat-messages" id="chatMessages" role="log" aria-live="polite" aria-label="Oracle conversation">
+        </div>
+        <div class="chat-input-area" id="chatInputArea"></div>
+      </main>
+    </section>
 
-  <!-- SPIRITUAL SHOP SECTION -->
-  <section id="shop" class="info-section shop-section">
-    <div class="shop-banner">
-      <div class="shop-content">
-        <h2 class="section-title">Crystals & More</h2>
-        <h3 class="section-subtitle" style="color:var(--accent-gold)">Our Spiritual Shop</h3>
-        <p class="shop-desc">
-          Explore our curated collection of energized, high-quality crystals, manifestation bracelets, sage, singing bowls, and healing products. Every crystal is cleansed and personally enchanted by Dr. Sneha Jain to hold high vibrations of abundance, protection, or love.
-        </p>
-        <a href="https://crystalsandmore.in" target="_blank" class="btn btn-primary shop-btn">
-          Visit crystalsandmore.in 🛍️
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- CONTACT & SOCIAL CONNECTIONS -->
-  <section id="contact" class="info-section contact-section">
-    <div class="section-grid">
-      <div class="contact-card">
-        <h2 class="section-title">Get In Touch</h2>
-        <h3 class="section-subtitle">Book a Personal Reading</h3>
-        <p class="about-description">
-          For detailed horoscope mapping, face reading, business remedies, or crystal recommendations, get in touch with our team directly.
-        </p>
-        <div class="contact-details">
-          <div class="contact-item">
-            <span class="contact-icon">💬</span>
-            <div class="contact-item-text">
-              <strong>WhatsApp Consults:</strong>
-              <a href="https://wa.me/918377947737" target="_blank" class="contact-link">+91 83779 47737</a>
-            </div>
-          </div>
-          <div class="contact-item">
-            <span class="contact-icon">📍</span>
-            <div class="contact-item-text">
-              <strong>Address:</strong>
-              <span>Shalimar Park, Bhola Nagar, Delhi - 110032 (Near DCP Office)</span>
-            </div>
+    <!-- ABOUT DR. SNEHA JAIN SECTION -->
+    <section id="about" class="info-section about-section">
+      <div class="section-grid">
+        <div class="about-image-wrap">
+          <img src="assets/sneha_jain.png" alt="Dr. Sneha Jain" class="about-image" />
+        </div>
+        <div class="about-text-wrap">
+          <h2 class="section-title">Dr. Sneha Jain</h2>
+          <h3 class="section-subtitle">Founder, The Hope Tarot</h3>
+          <p class="about-description">
+            Dr. Sneha Jain holds a PhD in Spiritual Healing and is the visionary founder of <strong>The Hope
+              Tarot</strong>. With over 19 years of profound experience in Tarot Reading, Astrology, Face Reading, and
+            Energy Healing, she has guided thousands of seekers worldwide toward clarity, transformation, and inner
+            strength.
+          </p>
+          <p class="about-description">
+            Her readings are dedicated to empowering individuals with truth rather than false predictions. She offers
+            practical, spiritual remedies to align your life alignment and overcome structural hurdles.
+          </p>
+          <div class="about-badges">
+            <div class="about-badge"><span>✦</span> 19+ Years Experience</div>
+            <div class="about-badge"><span>✦</span> PhD in Spiritual Healing</div>
+            <div class="about-badge"><span>✦</span> 100k+ YouTube Community</div>
           </div>
         </div>
       </div>
-      <div class="social-connect-card">
-        <h2 class="section-title">Follow Dr. Sneha Jain</h2>
-        <h3 class="section-subtitle">Join Our Spiritual Community</h3>
-        <p class="about-description">
-          Watch daily tarot readings, horoscope predictions, and energy lessons on our social channels.
-        </p>
-        <div class="social-buttons">
-          <a href="https://www.youtube.com/@thehopetarot" target="_blank" class="btn btn-secondary social-btn">
-            🎥 YouTube (100k+ Subscribers)
-          </a>
-          <a href="https://www.instagram.com/thehopetarot" target="_blank" class="btn btn-secondary social-btn">
-            📸 Instagram Community
+    </section>
+
+    <!-- SERVICES SECTION -->
+    <section id="services" class="info-section services-section">
+      <h2 class="section-title text-center">Spiritual Services</h2>
+      <h3 class="section-subtitle text-center">Avenues of Healing & Guidance</h3>
+
+      <div class="services-grid">
+        <div class="service-card">
+          <div class="service-icon">🃏</div>
+          <h4 class="service-card-title">Tarot Card Reading</h4>
+          <p class="service-card-desc">Deeply intuitive readings of the Major and Minor Arcana to uncover current life
+            energies and probable future trajectories.</p>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">✨</div>
+          <h4 class="service-card-title">Astrology & Kundli</h4>
+          <p class="service-card-desc">Analyzing cosmic charts to understand planetary alignments, birth charts, and
+            destiny progressions.</p>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">👁️</div>
+          <h4 class="service-card-title">Face Reading</h4>
+          <p class="service-card-desc">The ancient art of Physiognomy to read psychological patterns and potential based
+            on facial structures.</p>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">💎</div>
+          <h4 class="service-card-title">Crystal Energy Healing</h4>
+          <p class="service-card-desc">Using selected, cleansed, and energized crystals to balance chakras, clear
+            blocks, and attract manifestation.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SPIRITUAL SHOP SECTION -->
+    <section id="shop" class="info-section shop-section">
+      <div class="shop-banner">
+        <div class="shop-content">
+          <h2 class="section-title">Crystals & More</h2>
+          <h3 class="section-subtitle" style="color:var(--accent-gold)">Our Spiritual Shop</h3>
+          <p class="shop-desc">
+            Explore our curated collection of energized, high-quality crystals, manifestation bracelets, sage, singing
+            bowls, and healing products. Every crystal is cleansed and personally enchanted by Dr. Sneha Jain to hold
+            high vibrations of abundance, protection, or love.
+          </p>
+          <a href="https://crystalsandmore.in" target="_blank" class="btn btn-primary shop-btn">
+            Visit crystalsandmore.in 🛍️
           </a>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <footer class="oracle-footer" style="margin-top: var(--space-12)">
-    <p>✦ The Major Arcana · Rider-Waite Tradition · All readings are for reflective purposes ✦</p>
-    <p class="footer-fine" style="margin-top: var(--space-2)">© 2026 The Hope Tarot. Powered by AI Oracle.</p>
-  </footer>
+    <!-- CONTACT & SOCIAL CONNECTIONS -->
+    <section id="contact" class="info-section contact-section">
+      <div class="section-grid">
+        <div class="contact-card">
+          <h2 class="section-title">Get In Touch</h2>
+          <h3 class="section-subtitle">Book a Personal Reading</h3>
+          <p class="about-description">
+            For detailed horoscope mapping, face reading, business remedies, or crystal recommendations, get in touch
+            with our team directly.
+          </p>
+          <div class="contact-details">
+            <div class="contact-item">
+              <span class="contact-icon">💬</span>
+              <div class="contact-item-text">
+                <strong>WhatsApp Consults:</strong>
+                <a href="https://wa.me/918377947737" target="_blank" class="contact-link">+91 83779 47737</a>
+              </div>
+            </div>
+            <div class="contact-item">
+              <span class="contact-icon">📍</span>
+              <div class="contact-item-text">
+                <strong>Address:</strong>
+                <span>Shalimar Park, Bhola Nagar, Delhi - 110032 (Near DCP Office)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="social-connect-card">
+          <h2 class="section-title">Follow Dr. Sneha Jain</h2>
+          <h3 class="section-subtitle">Join Our Spiritual Community</h3>
+          <p class="about-description">
+            Watch daily tarot readings, horoscope predictions, and energy lessons on our social channels.
+          </p>
+          <div class="social-buttons">
+            <a href="https://www.youtube.com/@thehopetarot" target="_blank" class="btn btn-secondary social-btn">
+              🎥 YouTube (100k+ Subscribers)
+            </a>
+            <a href="https://www.instagram.com/thehopetarot" target="_blank" class="btn btn-secondary social-btn">
+              📸 Instagram Community
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
 
-</div>
+    <footer class="oracle-footer" style="margin-top: var(--space-12)">
+      <p>✦ The Major Arcana ✦ All readings are for reflective purposes ✦</p>
+      <p class="footer-fine" style="margin-top: var(--space-2)">© 2026 The Hope Tarot.</p>
+    </footer>
 
-<script src="config.js"></script>
-<script src="app.js"></script>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
 </body>
+
 </html>
